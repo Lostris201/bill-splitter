@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "SplitEasy",
+    "slug": "spliteasy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1D9E75"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.spliteasy.app",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1D9E75",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": { "projectId": "45852272-9154-4571-a7de-1cd5c1b8f05c" }
+    }
+  }
+}
