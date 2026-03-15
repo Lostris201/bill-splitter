@@ -5,6 +5,12 @@
         "projectId": "45852272-9154-4571-a7de-1cd5c1b8f05c"
       }
     },
-    "owner": "lostris"
+    "owner": "lostris",
+    "ios": {
+      "bundleIdentifier": "SplitEasy",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
   }
 }
