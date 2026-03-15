@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); color: var(--color-text-primary); background: transparent; }
+
+.root { padding: 1.5rem 0 2rem; }
+
+/* nav tabs */
+.tabs { display: flex; gap: 2px; margin-bottom: 1.5rem; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 3px; border: 1px solid var(--color-border-tertiary); }
+.tab { flex: 1; text-align: center; font-size: 12px; font-weight: 500; padding: 7px 4px; border-radius: 6px; cursor: pointer; color: var(--color-text-secondary); transition: all 0.15s; white-space: nowrap; }
+.tab.active { background: var(--color-background-primary); color: var(--color-text-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+.section { display: none; }
+.section.active { display: block; }
+
+/* shared */
+h2 { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.25rem; line-height: 1.5; }
+.block { background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; margin-bottom: 10px; }
+.block-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.block-title.green { color: #0F6E56; }
+.block-title.purple { color: #3C3489; }
+.block-title.amber { color: #854F0B; }
+.block-title.red { color: #A32D2D; }
+ul.items { list-style: none; }
+ul.items li { font-size: 13px; color: var(--color-text-primary); padding: 4px 0; padding-left: 14px; position: relative; line-height: 1.5; }
+ul.items li::before { content: "—"; position: absolute; left: 0; color: var(--color-text-tertiary); font-size: 11px; top: 5px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; margin: 2px 3px 2px 0; }
+.tag.g { background: rgba(29,158,117,0.12); color: #0F6E56; }
+.tag.p { background: rgba(83,74,183,0.12); color: #3C3489; }
+.tag.a { background: rgba(186,117,23,0.12); color: #854F0B; }
+.tag.r { background: rgba(163,45,45,0.12); color: #A32D2D; }
+
+/* ─── OVERVIEW ─── */
+.kv-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--color-border-tertiary); font-size: 13px; }
+.kv-row:last-child { border-bottom: none; }
+.kv-key { color: var(--color-text-secondary); }
+.kv-val { font-weight: 500; text-align: right; }
+.positioning { font-size: 14px; font-weight: 500; line-height: 1.6; color: var(--color-text-primary); padding: 12px 0 4px; border-top: 1px solid var(--color-border-tertiary); margin-top: 4px; }
+
+/* ─── SCREENS ─── */
+.screens-grid { display: flex; flex-direction: column; gap: 10px; }
+.screen-card { border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+.screen-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--color-background-secondary); cursor: pointer; }
+.screen-name { font-size: 13px; font-weight: 500; }
+.screen-badge { font-size: 11px; color: var(--color-text-tertiary); }
+.screen-body { padding: 12px 14px; border-top: 1px solid var(--color-border-tertiary); display: none; }
+.screen-body.open { display: block; }
+.screen-body p { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 8px; line-height: 1.5; }
+.comp-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.comp { font-size: 11px; padding: 3px 10px; border-radius: 6px; background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary); color: var(--color-text-secondary); }
+
+/* ─── DATA MODEL ─── */
+.model-entity { border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); margin-bottom: 8px; overflow: hidden; }
+.entity-header { padding: 8px 12px; background: var(--color-background-secondary); font-size: 12px; font-weight: 500; font-family: var(--font-mono); display: flex; justify-content: space-between; align-items: center; }
+.entity-body { padding: 8px 12px; }
+.field-row { display: flex; gap: 10px; align-items: baseline; padding: 2px 0; font-size: 12px; }
+.field-name { font-family: var(--font-mono); color: var(--color-text-primary); min-width: 140px; }
+.field-type { color: #3C3489; font-family: var(--font-mono); min-width: 70px; }
+.field-note { color: var(--color-text-tertiary); }
+
+/* ─── MONETIZATION ─── */
+.tier-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.tier { border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px; }
+.tier.pro { border-color: rgba(29,158,117,0.4); background: rgba(29,158,117,0.05); }
+.tier-name { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+.tier-price { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+.tier-price span { font-size: 11px; font-weight: 400; color: var(--color-text-secondary); }
+.tier-features { list-style: none; }
+.tier-features li { font-size: 11px; color: var(--color-text-secondary); padding: 2px 0; }
+.tier-features li.yes { color: var(--color-text-primary); }
+.tier-features li.yes::before { content: "✓ "; color: #1D9E75; }
+.tier-features li.no::before { content: "✗ "; color: var(--color-text-tertiary); }
+
+/* ─── ASO ─── */
+.kw-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.kw-table th { text-align: left; padding: 5px 8px; font-weight: 500; font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--color-border-tertiary); }
+.kw-table td { padding: 6px 8px; border-bottom: 1px solid var(--color-border-tertiary); vertical-align: middle; }
+.kw-table tr:last-child td { border-bottom: none; }
+.dot-bar { display: flex; gap: 3px; }
+.dot-b { width: 8px; height: 8px; border-radius: 50%; background: var(--color-border-secondary); }
+.dot-b.on { background: #1D9E75; }
+.dot-b.mid { background: #BA7517; }
+.kw-bold { font-weight: 500; font-family: var(--font-mono); }
+
+/* ─── TIMELINE ─── */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.tl-item { display: flex; gap: 14px; position: relative; }
+.tl-item:not(:last-child)::before { content: ""; position: absolute; left: 15px; top: 32px; width: 1px; height: calc(100% - 20px); background: var(--color-border-tertiary); }
+.tl-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--color-text-secondary); flex-shrink: 0; margin-top: 10px; background: var(--color-background-primary); }
+.tl-dot.d1 { border-color: #3C3489; color: #3C3489; }
+.tl-dot.d2 { border-color: #1D9E75; color: #1D9E75; }
+.tl-dot.d3 { border-color: #BA7517; color: #854F0B; }
+.tl-dot.d4 { border-color: #A32D2D; color: #A32D2D; }
+.tl-content { padding: 10px 0 18px; flex: 1; }
+.tl-day { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); margin-bottom: 2px; }
+.tl-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 8px; }
+.tl-tasks { list-style: none; }
+.tl-tasks li { font-size: 12px; color: var(--color-text-secondary); padding: 2px 0 2px 14px; position: relative; line-height: 1.5; }
+.tl-tasks li::before { content: "—"; position: absolute; left: 0; color: var(--color-text-tertiary); }
+.tl-tasks li strong { color: var(--color-text-primary); font-weight: 500; }
+.tl-goal { margin-top: 8px; font-size: 12px; padding: 6px 10px; border-radius: 6px; border-left: 3px solid; }
+.tl-goal.p { border-color: #534AB7; background: rgba(83,74,183,0.07); color: #3C3489; }
+.tl-goal.g { border-color: #1D9E75; background: rgba(29,158,117,0.07); color: #0F6E56; }
+.tl-goal.a { border-color: #BA7517; background: rgba(186,117,23,0.07); color: #854F0B; }
+.tl-goal.r { border-color: #A32D2D; background: rgba(163,45,45,0.07); color: #A32D2D; }
+
+@media (max-width: 480px) { .tier-grid { grid-template-columns: 1fr; } .tabs { overflow-x: auto; } .tab { min-width: 60px; } }
+</style>
+</head>
+<body>
+<div class="root">
+
+<div class="tabs">
+  <div class="tab active" onclick="show('overview', this)">Overview</div>
+  <div class="tab" onclick="show('screens', this)">Screens</div>
+  <div class="tab" onclick="show('data', this)">Data model</div>
+  <div class="tab" onclick="show('mono', this)">Monetization</div>
+  <div class="tab" onclick="show('aso', this)">ASO</div>
+  <div class="tab" onclick="show('timeline', this)">Timeline</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="section active" id="overview">
+  <h2>SplitEasy — no-account bill splitter</h2>
+  <p class="sub">Private, instant, offline-first. Designed to make Splitwise users switch in 10 seconds.</p>
+
+  <div class="block">
+    <div class="block-title">product identity</div>
+    <div class="kv-row"><span class="kv-key">App name</span><span class="kv-val">SplitEasy – Bill & Debt Tracker</span></div>
+    <div class="kv-row"><span class="kv-key">Subtitle</span><span class="kv-val">Split bills, track who owes you</span></div>
+    <div class="kv-row"><span class="kv-key">Platform</span><span class="kv-val">iOS first (Expo RN)</span></div>
+    <div class="kv-row"><span class="kv-key">Category</span><span class="kv-val">Finance</span></div>
+    <div class="kv-row"><span class="kv-key">Differentiator</span><span class="kv-val">Zero account, 100% local, instant</span></div>
+    <div class="kv-row"><span class="kv-key">Enemy</span><span class="kv-val">Splitwise ("too complicated, forced signup")</span></div>
+    <div class="positioning">"Split bills instantly. No account. No cloud. No one sees your money but you."</div>
+  </div>
+
+  <div class="block">
+    <div class="block-title green">core features (MVP only)</div>
+    <ul class="items">
+      <li>Add an expense: amount + description + who's involved</li>
+      <li>Even split OR custom amounts per person</li>
+      <li>Persistent debt list: "Alex owes you $18.50"</li>
+      <li>Settle up button — marks a debt paid with one tap</li>
+      <li>History log of settled debts (pro feature)</li>
+      <li>Multiple groups (pro feature — free gets 1)</li>
+      <li>Export summary to share via iMessage / clipboard</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <div class="block-title red">what we do NOT build (scope protection)</div>
+    <ul class="items">
+      <li>No accounts, no login, no backend</li>
+      <li>No syncing between devices (v1)</li>
+      <li>No recurring expenses</li>
+      <li>No bank/payment integration</li>
+      <li>No graphs or charts</li>
+      <li>No multi-currency (v1)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- SCREENS -->
+<div class="section" id="screens">
+  <h2>Screen map</h2>
+  <p class="sub">6 screens total. Every tap has one job. Tap a screen to see its spec.</p>
+
+  <div class="screens-grid">
+    <div class="screen-card">
+      <div class="screen-header" onclick="toggleScreen(this)">
+        <span class="screen-name">1 — Home (debt list)</span>
+        <span class="screen-badge">primary screen ↓</span>
+      </div>
+      <div class="screen-body open">
+        <p>The main screen. Shows all active debts. Two tabs: "They owe you" and "You owe them." Each row: person name, amount, last expense name. Tap row → debt detail. FAB (+) → add expense. If 0 debts: empty state with friendly message and big + button.</p>
+        <div class="comp-list">
+          <span class="comp">DebtListItem</span><span class="comp">TabBar (2 tabs)</span><span class="comp">EmptyState</span><span class="comp">FAB</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-card">
+      <div class="screen-header" onclick="toggleScreen(this)">
+        <span class="screen-name">2 — Add expense</span>
+        <span class="screen-badge">core flow ↓</span>
+      </div>
+      <div class="screen-body">
+        <p>Sheet modal (bottom sheet). Step 1: amount + description. Step 2: pick people from saved contacts OR type a new name. Step 3: split method — equal / custom. Confirm → saves expense + updates all affected debt totals. No back-end call. Instant.</p>
+        <div class="comp-list">
+          <span class="comp">AmountInput</span><span class="comp">PersonPicker</span><span class="comp">SplitMethodToggle</span><span class="comp">CustomAmountRow</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-card">
+      <div class="screen-header" onclick="toggleScreen(this)">
+        <span class="screen-name">3 — Debt detail</span>
+        <span class="screen-badge">settle flow ↓</span>
+      </div>
+      <div class="screen-body">
+        <p>Per-person breakdown. Shows all expenses contributing to this debt. Total outstanding at top. Settle up button at bottom — tapping shows confirmation sheet "Mark $18.50 from Alex as paid?" → moves to history. Share button generates a plain-text summary.</p>
+        <div class="comp-list">
+          <span class="comp">ExpenseRow</span><span class="comp">SettleButton</span><span class="comp">ShareSummary</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-card">
+      <div class="screen-header" onclick="toggleScreen(this)">
+        <span class="screen-name">4 — History (pro)</span>
+        <span class="screen-badge">pro gate ↓</span>
+      </div>
+      <div class="screen-body">
+        <p>All settled debts, sorted by date. Free users see a blurred list with paywall overlay after the 3rd settled debt. Pro users see full history with person, amount, date. Simple list, no charts.</p>
+        <div class="comp-list">
+          <span class="comp">HistoryRow</span><span class="comp">PaywallOverlay</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-card">
+      <div class="screen-header" onclick="toggleScreen(this)">
+        <span class="screen-name">5 — Groups (pro)</span>
+        <span class="screen-badge">pro gate ↓</span>
+      </div>
+      <div class="screen-body">
+        <p>Free users get 1 default group. Pro unlocks unlimited named groups (e.g. "Apartment," "Trip to Berlin"). Each group has its own debt list and history. Groups screen shows all groups with total outstanding per group.</p>
+        <div class="comp-list">
+          <span class="comp">GroupCard</span><span class="comp">NewGroupSheet</span><span class="comp">PaywallGate</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-card">
+      <div class="screen-header" onclick="toggleScreen(this)">
+        <span class="screen-name">6 — Paywall</span>
+        <span class="screen-badge">revenue screen ↓</span>
+      </div>
+      <div class="screen-body">
+        <p>Full-screen sheet triggered by pro feature gates. Lead with privacy angle: "Your data stays on your phone. Always." Show 3 options: monthly $1.99, one-time $2.99, restore purchase. Monthly highlighted as "most popular." Simple bullet list of pro features. No dark patterns.</p>
+        <div class="comp-list">
+          <span class="comp">PricingOption (×3)</span><span class="comp">FeatureList</span><span class="comp">RestorePurchase</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA MODEL -->
+<div class="section" id="data">
+  <h2>Data model</h2>
+  <p class="sub">100% local — AsyncStorage with a simple JSON schema. No Supabase, no Firebase, no auth.</p>
+
+  <div class="model-entity">
+    <div class="entity-header"><span>Group</span><span style="font-weight:400;color:var(--color-text-tertiary)">top-level container</span></div>
+    <div class="entity-body">
+      <div class="field-row"><span class="field-name">id</span><span class="field-type">string</span><span class="field-note">uuid v4</span></div>
+      <div class="field-row"><span class="field-name">name</span><span class="field-type">string</span><span class="field-note">"Default" for free tier</span></div>
+      <div class="field-row"><span class="field-name">createdAt</span><span class="field-type">number</span><span class="field-note">timestamp ms</span></div>
+    </div>
+  </div>
+
+  <div class="model-entity">
+    <div class="entity-header"><span>Person</span><span style="font-weight:400;color:var(--color-text-tertiary)">named participant</span></div>
+    <div class="entity-body">
+      <div class="field-row"><span class="field-name">id</span><span class="field-type">string</span><span class="field-note">uuid v4</span></div>
+      <div class="field-row"><span class="field-name">name</span><span class="field-type">string</span><span class="field-note">display name</span></div>
+      <div class="field-row"><span class="field-name">groupId</span><span class="field-type">string</span><span class="field-note">FK → Group</span></div>
+    </div>
+  </div>
+
+  <div class="model-entity">
+    <div class="entity-header"><span>Expense</span><span style="font-weight:400;color:var(--color-text-tertiary)">a single bill or cost</span></div>
+    <div class="entity-body">
+      <div class="field-row"><span class="field-name">id</span><span class="field-type">string</span><span class="field-note">uuid v4</span></div>
+      <div class="field-row"><span class="field-name">groupId</span><span class="field-type">string</span><span class="field-note">FK → Group</span></div>
+      <div class="field-row"><span class="field-name">description</span><span class="field-type">string</span><span class="field-note">"Dinner at Luca's"</span></div>
+      <div class="field-row"><span class="field-name">totalAmount</span><span class="field-type">number</span><span class="field-note">in user's local currency</span></div>
+      <div class="field-row"><span class="field-name">paidById</span><span class="field-type">string</span><span class="field-note">FK → Person (who paid)</span></div>
+      <div class="field-row"><span class="field-name">splits</span><span class="field-type">Split[]</span><span class="field-note">see below</span></div>
+      <div class="field-row"><span class="field-name">createdAt</span><span class="field-type">number</span><span class="field-note">timestamp ms</span></div>
+    </div>
+  </div>
+
+  <div class="model-entity">
+    <div class="entity-header"><span>Split</span><span style="font-weight:400;color:var(--color-text-tertiary)">embedded in Expense.splits[]</span></div>
+    <div class="entity-body">
+      <div class="field-row"><span class="field-name">personId</span><span class="field-type">string</span><span class="field-note">FK → Person</span></div>
+      <div class="field-row"><span class="field-name">amount</span><span class="field-type">number</span><span class="field-note">what this person owes</span></div>
+      <div class="field-row"><span class="field-name">settled</span><span class="field-type">boolean</span><span class="field-note">default false</span></div>
+      <div class="field-row"><span class="field-name">settledAt</span><span class="field-type">number | null</span><span class="field-note">timestamp when settled</span></div>
+    </div>
+  </div>
+
+  <div class="block" style="margin-top:10px;">
+    <div class="block-title purple">storage key pattern</div>
+    <ul class="items">
+      <li><code style="font-family:var(--font-mono);font-size:11px;">@spliteasy/groups</code> — Group[] serialized JSON</li>
+      <li><code style="font-family:var(--font-mono);font-size:11px;">@spliteasy/persons</code> — Person[] serialized JSON</li>
+      <li><code style="font-family:var(--font-mono);font-size:11px;">@spliteasy/expenses</code> — Expense[] serialized JSON</li>
+      <li><code style="font-family:var(--font-mono);font-size:11px;">@spliteasy/pro_status</code> — { isPro, purchaseType, purchasedAt }</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <div class="block-title green">computed debt (never stored)</div>
+    <ul class="items">
+      <li>Derive net balance per person on the fly from Expense[] + Split[]</li>
+      <li>Group all unsettled splits by (paidById ↔ personId) pair → net amount</li>
+      <li>Never store a "debt" entity — always computed, always consistent</li>
+    </ul>
+  </div>
+</div>
+
+<!-- MONETIZATION -->
+<div class="section" id="mono">
+  <h2>Monetization</h2>
+  <p class="sub">Three products. Two give users choice; one captures the impatient buyer.</p>
+
+  <div class="tier-grid">
+    <div class="tier">
+      <div class="tier-name">Free</div>
+      <div class="tier-price">$0</div>
+      <ul class="tier-features">
+        <li class="yes">1 group</li>
+        <li class="yes">Unlimited expenses</li>
+        <li class="yes">Active debt list</li>
+        <li class="yes">Settle up</li>
+        <li class="no">History after 3 items</li>
+        <li class="no">Multiple groups</li>
+        <li class="no">Export CSV</li>
+      </ul>
+    </div>
+    <div class="tier pro">
+      <div class="tier-name">Pro monthly</div>
+      <div class="tier-price">$1.99 <span>/mo</span></div>
+      <ul class="tier-features">
+        <li class="yes">Everything in free</li>
+        <li class="yes">Full history</li>
+        <li class="yes">Unlimited groups</li>
+        <li class="yes">Export summary</li>
+        <li class="yes">Cancel anytime</li>
+      </ul>
+    </div>
+    <div class="tier">
+      <div class="tier-name">Pro lifetime</div>
+      <div class="tier-price">$2.99 <span>once</span></div>
+      <ul class="tier-features">
+        <li class="yes">Everything in Pro</li>
+        <li class="yes">Pay once, own forever</li>
+        <li class="yes">No recurring charge</li>
+        <li class="yes">Best for light users</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-title amber">paywall trigger logic</div>
+    <ul class="items">
+      <li>Trigger on: tapping "Groups" when >1 groups exist (free limit)</li>
+      <li>Trigger on: scrolling past 3 items in History tab</li>
+      <li>Trigger on: tapping "Export" button</li>
+      <li>Never trigger mid-expense-add flow — let them complete first</li>
+      <li>Show paywall max once per session (don't hammer)</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <div class="block-title purple">StoreKit 2 product IDs</div>
+    <ul class="items">
+      <li><code style="font-family:var(--font-mono);font-size:11px;">com.spliteasy.pro.monthly</code> — auto-renewable subscription</li>
+      <li><code style="font-family:var(--font-mono);font-size:11px;">com.spliteasy.pro.lifetime</code> — non-consumable IAP</li>
+      <li>Use <code style="font-family:var(--font-mono);font-size:11px;">expo-iap</code> or <code style="font-family:var(--font-mono);font-size:11px;">react-native-iap</code></li>
+      <li>Always include Restore Purchases button (App Store requirement)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ASO -->
+<div class="section" id="aso">
+  <h2>ASO strategy</h2>
+  <p class="sub">100 keyword characters. Every character earns its spot. No social, pure search.</p>
+
+  <div class="block" style="margin-bottom:10px;">
+    <div class="block-title">app name (30 chars)</div>
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:500;padding:4px 0;">SplitEasy – Bill & Debt Tracker</div>
+  </div>
+
+  <div class="block" style="margin-bottom:10px;">
+    <div class="block-title">subtitle (30 chars)</div>
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:500;padding:4px 0;">Split bills, track who owes you</div>
+  </div>
+
+  <div class="block" style="margin-bottom:14px;">
+    <div class="block-title">keyword field (100 chars — no spaces after commas)</div>
+    <div style="font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);padding:4px 0;line-height:1.6;">split,bill,owe,debt,expense,share,calculator,money,owing,tab,pay,iou,settle,friends,cost</div>
+  </div>
+
+  <div class="block">
+    <div class="block-title green">primary keyword targets (ASA)</div>
+    <table class="kw-table">
+      <tr>
+        <th>Keyword</th><th>Volume</th><th>Competition</th><th>Match type</th>
+      </tr>
+      <tr>
+        <td class="kw-bold">split bill app</td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b"></div></div></td>
+        <td><div class="dot-bar"><div class="dot-b mid"></div><div class="dot-b mid"></div><div class="dot-b mid"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><span class="tag p">exact</span></td>
+      </tr>
+      <tr>
+        <td class="kw-bold">who owes me money</td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><span class="tag p">exact</span></td>
+      </tr>
+      <tr>
+        <td class="kw-bold">bill splitter</td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b"></div></div></td>
+        <td><div class="dot-bar"><div class="dot-b mid"></div><div class="dot-b mid"></div><div class="dot-b mid"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><span class="tag p">exact</span></td>
+      </tr>
+      <tr>
+        <td class="kw-bold">debt tracker</td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><span class="tag g">broad</span></td>
+      </tr>
+      <tr>
+        <td class="kw-bold">iou app</td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b"></div><div class="dot-b"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><span class="tag p">exact</span></td>
+      </tr>
+      <tr>
+        <td class="kw-bold">splitwise alternative</td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b on"></div><div class="dot-b"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><div class="dot-bar"><div class="dot-b on"></div><div class="dot-b"></div><div class="dot-b"></div><div class="dot-b"></div><div class="dot-b"></div></div></td>
+        <td><span class="tag p">exact</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="block">
+    <div class="block-title">screenshot strategy (6 screenshots)</div>
+    <ul class="items">
+      <li><strong>1:</strong> Headline — "Split bills in seconds. No account needed." + home screen</li>
+      <li><strong>2:</strong> "Add an expense in 3 taps" + add expense sheet</li>
+      <li><strong>3:</strong> "Always know who owes you" + debt list with real names/amounts</li>
+      <li><strong>4:</strong> "Settle up with one tap" + debt detail + settle button</li>
+      <li><strong>5:</strong> "Your data never leaves your phone" + privacy visual</li>
+      <li><strong>6:</strong> "No Splitwise required" + feature comparison (subtle)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div class="section" id="timeline">
+  <h2>4-day execution plan</h2>
+  <p class="sub">You're gone. Every day has one clear deliverable. No scope creep.</p>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot d1">D1</div>
+      <div class="tl-content">
+        <div class="tl-day">Day 1 — research + scaffold</div>
+        <div class="tl-title">Lock the ASO, wire the foundation</div>
+        <ul class="tl-tasks">
+          <li>Validate all 6 keyword targets in ASA (check blue dot density)</li>
+          <li>Read top 20 Splitwise 1-star reviews → steal exact pain phrases for screenshots</li>
+          <li><strong>expo init SplitEasy</strong> + navigation setup (Expo Router or React Navigation)</li>
+          <li>AsyncStorage wrapper + full data model implemented + tested</li>
+          <li>Debt computation function written + unit tested</li>
+          <li>expo-iap or react-native-iap installed + StoreKit sandbox configured</li>
+        </ul>
+        <div class="tl-goal p">End of day: data layer works perfectly. Navigation skeleton renders all 6 screens.</div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot d2">D2</div>
+      <div class="tl-content">
+        <div class="tl-day">Day 2 — core flow</div>
+        <div class="tl-title">The whole app works, ugly or not</div>
+        <ul class="tl-tasks">
+          <li>Home screen: debt list, both tabs, empty state, FAB</li>
+          <li>Add expense sheet: amount input → person picker → split method → save</li>
+          <li>Debt detail: expense breakdown + settle up button + confirmation</li>
+          <li>History screen: list view (free limit at 3 items)</li>
+          <li>Pro gate logic: checks purchase status before unlocking features</li>
+        </ul>
+        <div class="tl-goal g">End of day: full core loop works — add expense → see debt → settle → see history.</div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot d3">D3</div>
+      <div class="tl-content">
+        <div class="tl-day">Day 3 — paywall + polish</div>
+        <div class="tl-title">Make it beautiful enough to screenshot</div>
+        <ul class="tl-tasks">
+          <li>Paywall screen: 3 pricing options, feature list, restore button</li>
+          <li>StoreKit purchase + restore flow tested in sandbox</li>
+          <li>UI polish: typography, spacing, colors, micro-animations</li>
+          <li>App icon + splash screen designed and wired</li>
+          <li><strong>6 screenshots</strong> designed (Figma or Canva) — this is your real marketing asset</li>
+          <li>TestFlight build submitted and tested on device</li>
+        </ul>
+        <div class="tl-goal a">End of day: TestFlight build is demo-ready. Screenshots are done.</div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot d4">D4</div>
+      <div class="tl-content">
+        <div class="tl-day">Day 4 — submit + launch</div>
+        <div class="tl-title">In review before you sleep</div>
+        <ul class="tl-tasks">
+          <li>App Store Connect: fill all metadata (name, subtitle, description, keywords)</li>
+          <li>Privacy policy URL (use freeprivacypolicy.com, takes 5 min)</li>
+          <li>Submit for review — select "proceed to review" for faster processing</li>
+          <li>ASA campaign: 6 exact-match keywords, $20 test budget, $2 max CPT bid</li>
+          <li>Set up App Store Connect notifications for review status</li>
+        </ul>
+        <div class="tl-goal r">End of day: submitted and ASA campaign ready to activate on approval.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function show(id, tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  tab.classList.add('active');
+}
+function toggleScreen(header) {
+  const body = header.nextElementSibling;
+  const badge = header.querySelector('.screen-badge');
+  if (body.classList.contains('open')) {
+    body.classList.remove('open');
+    badge.textContent = badge.textContent.replace('↑','↓');
+  } else {
+    body.classList.add('open');
+    badge.textContent = badge.textContent.replace('↓','↑');
+  }
+}
+</script>
+</body>
+</html>
